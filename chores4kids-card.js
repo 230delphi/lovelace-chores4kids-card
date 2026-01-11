@@ -1505,7 +1505,7 @@ class Chores4KidsDevCard extends LitElement {
 
 	// ===== RENDER =====
 	render(){
-		return this._mode==='admin' ? this._renderAdmin() : (this._mode==='kid' ? this._renderChild() : this._renderOverviewOnly());
+		return this._mode==='admin' ? this._renderAdmin() : (this._mode==='kid' ? this._renderChild() : (this._mode==='approval' ? this._renderApproval() : this._renderOverviewOnly());
 	}
 
 	_isCollapsed(key){ try{ return !!(this._collapsed && this._collapsed[key]); }catch{ return false; } }
@@ -1871,6 +1871,60 @@ class Chores4KidsDevCard extends LitElement {
 						</ol>
 					`}
 				` : ''}
+				</div>
+
+				${pointsEnabled ? this._renderPointsModal() : ''}
+				${this._renderAllTasksModal()}
+				${pointsEnabled ? this._renderShopModal() : ''}
+			${this._renderAdvancedModal()}
+			${this._renderSortModal()}
+				${this._renderReassignModal()}
+		</ha-card>
+		${this._renderIconModal()}
+		${this._renderCustomIconModal()}
+	`;
+
+	} // ------- Approval VIEW ------- ${this._renderApproval()}
+	_renderApproval(){
+		const { children } = this._store; const totalKids = children.length;
+		const pointsEnabled = this._pointsEnabled();
+		const showScoreboard = pointsEnabled && (this.config?.show_scoreboard !== false);
+		return html`
+			<ha-card header="${this._t('card.admin_title')}">
+				<div class="card-content">
+					<h3 class="h3-row">
+						<span class="collapsible" @click=${()=>this._toggleSection('finished')}><ha-icon class="chev ${this._isCollapsed('finished')?'rot':''}" icon="mdi:chevron-down"></ha-icon>${this._t('overview.finished_title')}</span>
+					</h3>
+					${this._isCollapsed('finished')? '' : (()=>{
+						const allAssigned=(this._store.allTasks||[]).filter(t=>!!t.assigned_to);
+						const finished=allAssigned.filter(t=>['approved','awaiting_approval','taken'].includes(this._effectiveStatus(t)));
+						if(!finished.length) return html`<i>${this._t('overview.finished_none')}</i>`;
+						const sorted=this._sortTasks(finished, true);
+						const row=(t)=> html`<tr>
+							<td data-label="${this._t('ph.title')}">${t.title}${t.icon? html` <ha-icon class="inline-ico" icon="${t.icon}"></ha-icon>`:''}</td>
+							${pointsEnabled ? html`<td data-label="${this._t('ph.points')}"><b>${t.points}</b></td>`:''}
+							<td data-label="${this._t('th.categories')}">${(()=>{ const ids=Array.isArray(t.categories)? t.categories:[]; const names=this._orderedCategoryNames(ids); return names.length? names.map(n=> html`<span class='chip'>${n}</span>`): html`—`; })()}</td>
+								<td data-label="${this._t('th.status')}">${this._renderStatusBadge(t)}</td>
+							<td data-label="${this._t('th.completed')}">${(()=>{ const ts=this._displayedTsFor(t); if(!ts) return html`—`; const dt=this._fmtDateTime(ts); return html`${dt.formatted}`; })()}</td>
+							<td data-label="${this._t('th.assign')}">${t.assigned_to_name || this._t('status.unassigned')}</td>
+							<td data-label="${this._t('th.actions')}">
+								${t.status==="awaiting_approval" ? html`
+									<button class="btn-primary" @click=${()=>this._approve(t)}>${this._t('btn.approve')}</button>
+									<button class="btn-ghost" @click=${()=>this._setStatus(t.id,'assigned')}>${this._t('btn.back')}</button>
+									<button class="btn-danger" @click=${()=>this._deleteTask(t.id)}>${this._t('btn.delete')}</button>
+								` : html`
+									${this._canManualReassign(t) ? html`<button class="btn-ghost" @click=${()=>this._manualReassign(t)}>${this._t('btn.back')}</button>`:''}
+									<button class="btn-danger" @click=${()=>this._deleteTask(t.id)}>${this._t('btn.delete')}</button>
+								`}
+							</td>
+						</tr>`;
+						return html`
+							<div class="table-wrap"><table class="table-center table-fixed">${this._renderAssignedFinishedColgroup()}
+								<thead><tr><th>${this._t('ph.title')}</th>${pointsEnabled ? html`<th>${this._t('ph.points')}</th>`:''}<th>${this._t('th.categories')}</th><th>${this._t('th.status')}</th><th>${this._t('th.completed')}</th><th>${this._t('th.assign')}</th><th>${this._t('th.actions')}</th></tr></thead>
+								<tbody>${sorted.map(row)}</tbody>
+							</table></div>
+						`;
+					})()}
 				</div>
 
 				${pointsEnabled ? this._renderPointsModal() : ''}
