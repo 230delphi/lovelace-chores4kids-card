@@ -1,4 +1,4 @@
-# Chores4Kids Card — Feature Guide & How‑To 🧹👧👦
+# RK - Fork Chores4Kids Card — Feature Guide & How‑To 🧹👧👦
 
 [![hacs\_badge](https://img.shields.io/badge/HACS-Default-blue.svg)](https://hacs.xyz)
 
