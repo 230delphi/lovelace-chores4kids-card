@@ -1504,8 +1504,13 @@ class Chores4KidsDevCard extends LitElement {
 	}
 
 	// ===== RENDER =====
-	render(){
-		return this._mode==='admin' ? this._renderAdmin() : (this._mode==='kid' ? this._renderChild() : (this._mode==='approval' ? this._renderApproval() : this._renderOverviewOnly());
+	render() {
+		return this._mode === 'admin' ? this._renderAdmin() : 
+			(this._mode === 'kid' ? this._renderChild() : 
+				(this._mode === 'approval' ? this._renderApproval() : 
+					this._renderOverviewOnly()
+				)
+			);
 	}
 
 	_isCollapsed(key){ try{ return !!(this._collapsed && this._collapsed[key]); }catch{ return false; } }
